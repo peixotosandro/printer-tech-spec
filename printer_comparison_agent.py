@@ -33,7 +33,7 @@ def compare_equipments(model1, model2):
     try:
         logger.debug(f"Calling API with models: {model1}, {model2}")
         completion = client.chat.completions.create(
-            model="grok",
+            model="grok-3-mini-beta",  # Alterado para grok-3-mini-beta
             messages=messages,
             temperature=0.2,
             max_tokens=2000,
@@ -47,6 +47,8 @@ def compare_equipments(model1, model2):
         return content if content else "Error: No information returned by the API. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
     except Exception as e:
         logger.error(f"Error in API call: {str(e)}")
+        if "404" in str(e):
+            return "Error: Model not found or access denied for your team. Verify your API key at https://x.ai/api and contact support if the issue persists, quoting your team ID."
         return f"Error: {str(e)}. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
 
 # Interface web em HTML
@@ -87,7 +89,6 @@ HTML_TEMPLATE = """
         {% else %}
             <div id="result">{{ result }}</div>
             <script>
-                // Renderiza o Markdown como HTML
                 const markdownText = document.getElementById('result').innerText;
                 document.getElementById('result').innerHTML = marked.parse(markdownText);
             </script>
