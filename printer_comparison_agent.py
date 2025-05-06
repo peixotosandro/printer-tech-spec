@@ -20,14 +20,14 @@ client = OpenAI(
 # Função para comparar equipamentos usando a API da xAI
 def compare_equipments(model1, model2):
     messages = [
-        {
-            "role": "system",
-            "content": "Você é um assistente de IA altamente inteligente especializado em comparar especificações técnicas de equipamentos. Responda sempre em português e use exatamente os modelos fornecidos pelo usuário.",
-        },
-        {
-            "role": "user",
-            "content": f"Compare os modelos {model1} e {model2}. Inclua velocidade (ppm), resolução (dpi), conectividade, funções, capacidade de papel (folhas) e preço aproximado (R$). Retorne uma tabela em formato Markdown completa."
-        },
+    {
+        "role": "system",
+        "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in Portuguese and use exactly the models provided by the user.",
+    },
+    {
+        "role": "user",
+        "content": f"Compare the models {model1} and {model2}. Include speed (ppm), resolution (dpi), connectivity, functions, paper capacity (sheets), screen size (inches), and approximate price (US$). Return a complete table in Markdown format."
+    },
     ]
     
     try:
