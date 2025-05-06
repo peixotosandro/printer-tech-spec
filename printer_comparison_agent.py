@@ -22,7 +22,7 @@ def compare_equipments(model1, model2):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of devices. Always respond in English and use exactly the models provided (Lexmark MX432 must use only MX432adwe data, not MX431 or similar models). Provide accurate data based on the most recent official specifications from the manufacturer's website (www.lexmark.com for Lexmark, www.ricoh.com for Ricoh), cross-checked with the latest product pages and support documentation as of May 2025. Avoid outdated or generalized data. For enterprise-level models like MX432 or MX632, screen sizes must be 4.3 or 7 inches. Return a complete table in Markdown format with columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of devices. Always respond in English and use exactly the models provided (Lexmark MX432 must use only MX432adwe data, not MX431 or similar models). Provide accurate data based on the most recent official specifications from the manufacturer's website (www.lexmark.com for Lexmark, www.ricoh.com for Ricoh, www.hp.com for HP), cross-checked with the latest product pages and support documentation as of May 2025. Avoid outdated or generalized data. For enterprise-level models like MX432 or MX632, screen sizes must be 4.3 or 7 inches. Return a complete table in Markdown format with columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
         },
         {
             "role": "user",
@@ -33,7 +33,7 @@ def compare_equipments(model1, model2):
     try:
         logger.debug(f"Calling API with models: {model1}, {model2}")
         completion = client.chat.completions.create(
-            model="grok-3-mini-beta",  # Alterado para grok-3-mini-beta
+            model="grok-3-mini-beta",
             messages=messages,
             temperature=0.2,
             max_tokens=2000,
@@ -87,10 +87,19 @@ HTML_TEMPLATE = """
         {% if "Error" in result %}
             <div class="error">{{ result }}</div>
         {% else %}
-            <div id="result">{{ result }}</div>
+            <div id="result">{{ result|safe }}</div>
             <script>
-                const markdownText = document.getElementById('result').innerText;
-                document.getElementById('result').innerHTML = marked.parse(markdownText);
+                document.addEventListener('DOMContentLoaded', function() {
+                    const resultDiv = document.getElementById('result');
+                    if (resultDiv) {
+                        const markdownText = resultDiv.innerText;
+                        try {
+                            resultDiv.innerHTML = marked.parse(markdownText);
+                        } catch (e) {
+                            resultDiv.innerHTML = '<p>Error rendering Markdown: ' + e.message + '</p>';
+                        }
+                    }
+                });
             </script>
         {% endif %}
     {% endif %}
