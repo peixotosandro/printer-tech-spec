@@ -13,47 +13,48 @@ logger = logging.getLogger(__name__)
 # Configuração do cliente OpenAI para a API da xAI com cliente HTTP personalizado
 client = OpenAI(
     base_url="https://api.x.ai/v1",
-    api_key=os.getenv("XAI_API_KEY"),  # Chave será configurada no ambiente de hospedagem
-    http_client=httpx.Client(proxies=None),  # Desativa proxies para evitar conflitos
+    api_key=os.getenv("XAI_API_KEY"),
+    http_client=httpx.Client(proxies=None),
 )
 
 # Função para comparar equipamentos usando a API da xAI
 def compare_equipments(model1, model2):
     messages = [
-    {
-        "role": "system",
-        "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in Portuguese and use exactly the models provided by the user.",
-    },
-    {
-        "role": "user",
-        "content": f"Compare the models {model1} and {model2}. Include speed (ppm), resolution (dpi), connectivity, functions, paper capacity (sheets), screen size (inches), and approximate price (US$). Return a complete table in Markdown format."
-    },
+        {
+            "role": "system",
+            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in English and use exactly the models provided by the user. Provide only accurate data based on official specifications, avoiding assumptions or creative guesses. Return a complete table in Markdown format with the following columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity, functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+        },
+        {
+            "role": "user",
+            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications."
+        },
     ]
     
     try:
         logger.debug(f"Chamando API com modelos: {model1}, {model2}")
         completion = client.chat.completions.create(
-            model="grok-3-mini-beta",  # Ou "grok-3-mini-fast-beta"
+            model="grok-3-mini-beta",
             messages=messages,
-            temperature=0.7,
-            max_tokens=3000,
+            temperature=0.2,  # Reduzido para maior precisão
+            max_tokens=2000,
         )
         
         logger.debug(f"Resposta bruta da API: {completion}")
         content = completion.choices[0].message.content
         if not content and hasattr(completion.choices[0].message, 'reasoning_content'):
             content = completion.choices[0].message.reasoning_content
-        return content if content else "Nenhuma informação retornada pela API."
+        
+        return content if content else "Error: No information returned by the API. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
     except Exception as e:
         logger.error(f"Erro na chamada à API: {str(e)}")
-        return f"Erro: {str(e)}. Verifique a chave de API em https://x.ai/api ou a documentação em https://docs.x.ai."
+        return f"Error: {str(e)}. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
 
 # Interface web em HTML
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Agente de Comparação de Equipamentos</title>
+    <title>Equipment Comparison Agent</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -65,17 +66,17 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Agente de Comparação de Equipamentos</h1>
+    <h1>Equipment Comparison Agent</h1>
     <form method="POST">
-        <label>Modelo 1:</label>
-        <input type="text" name="model1" placeholder="Ex: Lexmark MX421" required>
-        <label>Modelo 2:</label>
-        <input type="text" name="model2" placeholder="Ex: HP LaserJet Pro M428" required>
-        <input type="submit" value="Comparar">
+        <label>Model 1:</label>
+        <input type="text" name="model1" placeholder="Ex: Lexmark MX632" required>
+        <label>Model 2:</label>
+        <input type="text" name="model2" placeholder="Ex: Lexmark MX622" required>
+        <input type="submit" value="Compare">
     </form>
     {% if result %}
-        <h2>Resultado da Comparação</h2>
-        {% if "Erro" in result %}
+        <h2>Comparison Result</h2>
+        {% if "Error" in result %}
             <pre class="error">{{ result }}</pre>
         {% else %}
             <pre>{{ result }}</pre>
