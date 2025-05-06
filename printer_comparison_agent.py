@@ -22,31 +22,31 @@ def compare_equipments(model1, model2):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in English and use exactly the models provided by the user. Provide only accurate data based on official specifications, avoiding assumptions or creative guesses. Return a complete table in Markdown format with the following columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity, functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in English and use exactly the models provided by the user. Provide only accurate data based on the most recent official specifications from the manufacturer's website (e.g., Lexmark or HP). Cross-check data across multiple official sources to ensure consistency, and if data varies, use the most recent value or note the discrepancy. Return a complete table in Markdown format with the following columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
         },
         {
             "role": "user",
-            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications."
+            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications from the manufacturer's official sources."
         },
     ]
     
     try:
-        logger.debug(f"Chamando API com modelos: {model1}, {model2}")
+        logger.debug(f"Calling API with models: {model1}, {model2}")
         completion = client.chat.completions.create(
             model="grok-3-mini-beta",
             messages=messages,
-            temperature=0.2,  # Reduzido para maior precisão
+            temperature=0.2,  # Low temperature for precision
             max_tokens=2000,
         )
         
-        logger.debug(f"Resposta bruta da API: {completion}")
+        logger.debug(f"Raw API response: {completion}")
         content = completion.choices[0].message.content
         if not content and hasattr(completion.choices[0].message, 'reasoning_content'):
             content = completion.choices[0].message.reasoning_content
         
         return content if content else "Error: No information returned by the API. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
     except Exception as e:
-        logger.error(f"Erro na chamada à API: {str(e)}")
+        logger.error(f"Error in API call: {str(e)}")
         return f"Error: {str(e)}. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
 
 # Interface web em HTML
@@ -54,7 +54,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Equipment Comparison Agent</title>
+    <title>Device Comparison Agent</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -66,12 +66,12 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Equipment Comparison Agent</h1>
+    <h1>Device Comparison Agent</h1>
     <form method="POST">
-        <label>Model 1:</label>
-        <input type="text" name="model1" placeholder="Ex: Lexmark MX632" required>
-        <label>Model 2:</label>
-        <input type="text" name="model2" placeholder="Ex: Lexmark MX622" required>
+        <label>Device Model 1:</label>
+        <input type="text" name="model1" required>
+        <label>Device Model 2:</label>
+        <input type="text" name="model2" required>
         <input type="submit" value="Compare">
     </form>
     {% if result %}
