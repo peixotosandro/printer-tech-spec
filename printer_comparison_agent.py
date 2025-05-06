@@ -1,7 +1,8 @@
-from openai import OpenAI
-from flask import Flask, request, render_template_string
 import logging
+from flask import Flask, request, render_template_string
 import os
+import httpx
+from openai import OpenAI
 
 app = Flask(__name__)
 
@@ -9,10 +10,11 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Configuração do cliente OpenAI para a API da xAI (usando variável de ambiente)
+# Configuração do cliente OpenAI para a API da xAI com cliente HTTP personalizado
 client = OpenAI(
     base_url="https://api.x.ai/v1",
     api_key=os.getenv("XAI_API_KEY"),  # Chave será configurada no ambiente de hospedagem
+    http_client=httpx.Client(proxies=None),  # Desativa proxies para evitar conflitos
 )
 
 # Função para comparar equipamentos usando a API da xAI
@@ -24,7 +26,7 @@ def compare_equipments(model1, model2):
         },
         {
             "role": "user",
-            "content": f"Compare os modelos {model1} e {model2}. Inclua velocidade (ppm), resolução (dpi), conectividade, funções, capacidade de papel (folhas), tamanho da tela (polegadas) e preço aproximado (R$). Retorne uma tabela em formato Markdown completa."
+            "content": f"Compare os modelos {model1} e {model2}. Inclua velocidade (ppm), resolução (dpi), conectividade, funções, capacidade de papel (folhas) e preço aproximado (R$). Retorne uma tabela em formato Markdown completa."
         },
     ]
     
