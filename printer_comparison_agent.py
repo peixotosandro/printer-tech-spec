@@ -22,11 +22,11 @@ def compare_equipments(model1, model2):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in English and use exactly the models provided by the user (e.g., Lexmark MX432 must not be confused with MX431 or similar models like MX431adn or MX431adw). Provide only accurate data based on the most recent official specifications from the manufacturer's website (e.g., Lexmark or HP). Cross-check data across multiple official sources to ensure consistency, and if data varies, use the most recent value or note the discrepancy. For enterprise-level models like MX432 or MX632, screen sizes are typically larger (e.g., 4.3 or 7 inches); ensure this is reflected accurately. Return a complete table in Markdown format with the following columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of equipment. Always respond in English and use exactly the models provided by the user (e.g., Lexmark MX432 must not be confused with MX431 or similar models like MX431adn or MX431adw; use only MX432adwe data). Provide only accurate data based on the most recent official specifications from Lexmark's website (www.lexmark.com), cross-checked with the latest product pages and support documentation (e.g., as of May 2025). Avoid using outdated or generalized data from similar models. For enterprise-level models like MX432 or MX632, screen sizes are typically 4.3 or 7 inches; ensure this is reflected accurately. Return a complete table in Markdown format with the following columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
         },
         {
             "role": "user",
-            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications from the manufacturer's official sources, ensuring the exact model is represented (e.g., for Lexmark MX432, use its specific data, not MX431 data)."
+            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications from Lexmark's official sources (www.lexmark.com), ensuring the exact model is represented (e.g., for Lexmark MX432, use MX432adwe data only, not MX431 data)."
         },
     ]
     
@@ -69,9 +69,9 @@ HTML_TEMPLATE = """
     <h1>Equipment Comparison Agent</h1>
     <form method="POST">
         <label>Model 1:</label>
-        <input type="text" name="model1" placeholder="Ex: Lexmark MX432" required>
+        <input type="text" name="model1" placeholder="Ex: Lexmark MX..." required>
         <label>Model 2:</label>
-        <input type="text" name="model2" placeholder="Ex: Lexmark MX632" required>
+        <input type="text" name="model2" placeholder="Ex: HP LaserJet..." required>
         <input type="submit" value="Compare">
     </form>
     {% if result %}
