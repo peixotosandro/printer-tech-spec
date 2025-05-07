@@ -1,6 +1,6 @@
 import logging
 from flask import Flask, request, render_template_string
-from markupsafe import escape
+from markupsafe import Markup
 import markdown
 import os
 import httpx
@@ -78,9 +78,9 @@ HTML_TEMPLATE = """
     <h1>Device Comparison Agent</h1>
     <form method="POST">
         <label>Model 1:</label>
-        <input type="text" name="model1" placeholder="Ex: Lexmark MX432" required>
+        <input type="text" name="model1" required>
         <label>Model 2:</label>
-        <input type="text" name="model2" placeholder="Ex: Lexmark MX622" required>
+        <input type="text" name="model2" required>
         <input type="submit" value="Compare">
     </form>
     {% if result %}
@@ -104,11 +104,12 @@ def index():
         model2 = request.form["model2"]
         markdown_text = compare_equipments(model1, model2)
         if "Error" not in markdown_text:
-            # Converter Markdown para HTML no servidor
-            result = markdown.markdown(markdown_text, extensions=['tables'])
+            # Remover escaping manual e converter Markdown para HTML
+            cleaned_text = markdown_text.replace('&lt;', '<').replace('&gt;', '>')
+            result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
         else:
-            result = markdown_text
-    return render_template_string(HTML_TEMPLATE, result=escape(result) if result else None)
+            result = Markup(markdown_text)  # Mantém mensagens de erro como texto seguro
+    return render_template_string(HTML_TEMPLATE, result=result)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
