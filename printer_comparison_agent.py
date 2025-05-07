@@ -5,6 +5,7 @@ import markdown
 import os
 import httpx
 from openai import OpenAI
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -21,10 +22,11 @@ client = OpenAI(
 
 # Função para buscar dispositivos com base em especificações e fabricantes fornecidos
 def find_equipments(input_text):
+    current_date = datetime.now().strftime("%d/%m/%Y")
     messages = [
         {
             "role": "system",
-            "content": "Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) até maio de 2025. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Ricoh) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm). Identifique os fabricantes mencionados (Lexmark, HP, Ricoh, Epson, Brother) e as especificações a partir do texto. Para cada fabricante identificado, liste todos os dispositivos que correspondam à maioria das especificações fornecidas. Se nenhum dispositivo de um fabricante atender à maioria das especificações, indique 'Nenhum dispositivo correspondente'. Retorne apenas uma tabela em formato Markdown com as colunas: Especificação, seguido pelas colunas de cada fabricante identificado. Inclua especificações-chave como velocidade (ppm), resolução (dpi), conectividade (ex.: 'Sem fio' se aplicável), funções, capacidade de papel (folhas), tamanho da tela (polegadas) e preço aproximado (US$). Se os dados não estiverem disponíveis, indique 'Não disponível'."
+            "content": f"Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual ({current_date}). O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm). Identifique todos os fabricantes mencionados no texto e as especificações a partir dele. Para cada fabricante identificado, liste todos os dispositivos que correspondam à maioria das especificações fornecidas em uma tabela. Se nenhum dispositivo de um fabricante atender à maioria das especificações ou se o fabricante não for reconhecido com dados disponíveis, indique 'Nenhum dispositivo correspondente ou fabricante não reconhecido' na coluna Dispositivo para esse fabricante. Retorne apenas uma tabela em formato Markdown com as colunas: Fabricante, Dispositivo, Velocidade (ppm), Resolução (dpi), Conectividade, Funções, Capacidade de papel (folhas), Tamanho da tela (polegadas), Preço aproximado (US$). Cada linha deve representar um dispositivo específico. Se os dados não estiverem disponíveis, indique 'Não disponível'."
         },
         {
             "role": "user",
@@ -58,7 +60,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Correspondência de Especificações de Dispositivos</title>
+    <title>Pesquisa de Dispositivos</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -75,10 +77,10 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Correspondência de Especificações de Dispositivos</h1>
+    <h1>Pesquisa de Dispositivos</h1>
     <form method="POST">
         <label>Insira os Fabricantes e Especificações Técnicas:</label><br>
-        <textarea name="input_text" placeholder="Ex: Lexmark, HP, Epson, Impressora multifuncional, 40 ppm, 1200x1200 dpi, sem fio, impressão/varredura/cópia, capacidade de 500 folhas, tela de 4,3 polegadas" required></textarea><br>
+        <textarea name="input_text" placeholder="Lexmark, HP, Canon, Impressora multifuncional, 40 ppm, 1200x1200 dpi, sem fio, impressão/digitalização/cópia, capacidade de 500 folhas, tela de 4,3 polegadas" required></textarea><br>
         <input type="submit" value="Encontrar Dispositivos">
     </form>
     {% if result %}
@@ -98,7 +100,6 @@ HTML_TEMPLATE = """
 def index():
     result = None
     if request.method == "POST":
-        # Verifica se o campo input_text está presente e não está vazio
         if "input_text" not in request.form or not request.form["input_text"].strip():
             result = Markup("Erro: O campo de fabricantes e especificações não pode estar vazio.")
         else:
