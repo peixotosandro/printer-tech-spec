@@ -23,7 +23,7 @@ client = OpenAI(
 # Função para buscar dispositivos com base em especificações e fabricantes fornecidos
 def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
-    one_year_ago = (datetime.now() - timedelta(days=365)).strftime("%d/%m/%Y")
+    one_year_ago = (datetime.now() - timedelta(days=730)).strftime("%d/%m/%Y")
     messages = [
         {
             "role": "system",
@@ -41,7 +41,7 @@ def find_equipments(input_text):
             model="grok-3-beta",
             messages=messages,
             temperature=0.2,
-            max_tokens=4000,
+            max_tokens=7000,
         )
         
         logger.debug(f"Raw API response: {completion}")
