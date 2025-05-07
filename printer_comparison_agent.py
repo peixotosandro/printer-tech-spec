@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, escape
 import os
 import httpx
 from openai import OpenAI
@@ -58,6 +58,23 @@ HTML_TEMPLATE = """
 <head>
     <title>Device Comparison Agent</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        function renderMarkdown() {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv && resultDiv.innerText) {
+                console.log('Rendering Markdown:', resultDiv.innerText);
+                try {
+                    resultDiv.innerHTML = marked.parse(resultDiv.innerText);
+                } catch (e) {
+                    console.error('Markdown rendering error:', e);
+                    resultDiv.innerHTML = '<p style="color: red;">Error rendering Markdown: ' + e.message + '</p>';
+                }
+            } else {
+                console.log('No resultDiv or content found.');
+            }
+        }
+        window.onload = renderMarkdown;
+    </script>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -77,30 +94,17 @@ HTML_TEMPLATE = """
     <h1>Device Comparison Agent</h1>
     <form method="POST">
         <label>Model 1:</label>
-        <input type="text" name="model1" required>
+        <input type="text" name="model1" placeholder="Ex: Lexmark MX432" required>
         <label>Model 2:</label>
-        <input type="text" name="model2" required>
+        <input type="text" name="model2" placeholder="Ex: Lexmark MX622" required>
         <input type="submit" value="Compare">
     </form>
     {% if result %}
         <h2>Comparison Result</h2>
         {% if "Error" in result %}
-            <div class="error">{{ result }}</div>
+            <div class="error">{{ result|safe }}</div>
         {% else %}
             <div id="result">{{ result|safe }}</div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const resultDiv = document.getElementById('result');
-                    if (resultDiv) {
-                        const markdownText = resultDiv.innerText;
-                        try {
-                            resultDiv.innerHTML = marked.parse(markdownText);
-                        } catch (e) {
-                            resultDiv.innerHTML = '<p>Error rendering Markdown: ' + e.message + '</p>';
-                        }
-                    }
-                });
-            </script>
         {% endif %}
     {% endif %}
 </body>
@@ -115,7 +119,7 @@ def index():
         model1 = request.form["model1"]
         model2 = request.form["model2"]
         result = compare_equipments(model1, model2)
-    return render_template_string(HTML_TEMPLATE, result=result)
+    return render_template_string(HTML_TEMPLATE, result=escape(result) if result else None)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
