@@ -35,7 +35,7 @@ def compare_equipments(model1, model2):
     try:
         logger.debug(f"Calling API with models: {model1}, {model2}")
         completion = client.chat.completions.create(
-            model="grok-3-mini-beta",
+            model="grok-3-beta",
             messages=messages,
             temperature=0.2,
             max_tokens=2000,
