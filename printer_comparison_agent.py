@@ -98,13 +98,17 @@ HTML_TEMPLATE = """
 def index():
     result = None
     if request.method == "POST":
-        input_text = request.form["input_text"]
-        markdown_text = find_equipments(input_text)
-        if "Erro" not in markdown_text:
-            cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
-            result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
+        # Verifica se o campo input_text está presente e não está vazio
+        if "input_text" not in request.form or not request.form["input_text"].strip():
+            result = Markup("Erro: O campo de fabricantes e especificações não pode estar vazio.")
         else:
-            result = Markup(markdown_text)
+            input_text = request.form["input_text"]
+            markdown_text = find_equipments(input_text)
+            if "Erro" not in markdown_text:
+                cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
+                result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
+            else:
+                result = Markup(markdown_text)
     return render_template_string(HTML_TEMPLATE, result=result)
 
 if __name__ == "__main__":
