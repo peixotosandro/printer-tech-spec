@@ -5,6 +5,7 @@ import markdown
 import os
 import httpx
 from openai import OpenAI
+import uuid
 
 app = Flask(__name__)
 
@@ -19,23 +20,23 @@ client = OpenAI(
     http_client=httpx.Client(proxies=None),
 )
 
-# Função para comparar dispositivos usando a API da xAI
-def compare_equipments(model1, model2):
+# Função para buscar dispositivos com base em especificações fornecidas
+def find_equipments(specs):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in comparing technical specifications of devices. Always respond in English and use exactly the models provided (Lexmark MX432 must use only MX432adwe data, not MX431 or similar models). Provide accurate data based on the most recent official specifications from the manufacturer's website (www.lexmark.com for Lexmark, www.ricoh.com for Ricoh, www.hp.com for HP), cross-checked with the latest product pages and support documentation as of May 2025. Avoid outdated or generalized data. For enterprise-level models like MX432 or MX632, screen sizes must be 4.3 or 7 inches. Return a complete table in Markdown format with columns: Specification, [Model1], [Model2], including speed (ppm), resolution (dpi), connectivity (include 'Wireless (optional)' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+            "content": "You are a highly intelligent AI assistant specialized in finding devices from manufacturers like Lexmark, HP, Ricoh, Epson, Brother, and others that match user-provided technical specifications. Use the most recent official specifications from manufacturers' websites (e.g., www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) as of May 2025. For each manufacturer, identify one device that most closely matches the provided specifications. If no device from a manufacturer meets the majority of the specifications, state that the manufacturer does not have a suitable device. Return a table in Markdown format with columns: Specification, Lexmark, HP, Ricoh, Epson, Brother. Include key specifications like speed (ppm), resolution (dpi), connectivity (e.g., 'Wireless' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable or no device matches, state 'Not available' or 'No matching device' for that manufacturer."
         },
         {
             "role": "user",
-            "content": f"Compare the models {model1} and {model2}. Use precise and verified specifications from the manufacturer's official sources, ensuring the exact model is represented."
+            "content": f"Find devices from Lexmark, HP, Ricoh, Epson, and Brother that match these specifications: {specs}. Ensure the devices are the closest match to the provided description."
         },
     ]
     
     try:
-        logger.debug(f"Calling API with models: {model1}, {model2}")
+        logger.debug(f"Calling API with specifications: {specs}")
         completion = client.chat.completions.create(
-            model="grok-3-beta",
+            model="grok-3-mini-beta",
             messages=messages,
             temperature=0.2,
             max_tokens=2000,
@@ -58,13 +59,13 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Device Comparison Agent</title>
+    <title>Device Specification Matcher</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
         h2 { color: #555; margin-top: 20px; }
         form { margin-bottom: 20px; }
-        input[type=text] { padding: 8px; width: 200px; margin-right: 10px; }
+        textarea { padding: 8px; width: 500px; height: 100px; margin-right: 10px; }
         input[type=submit] { padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         .error { color: red; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -75,16 +76,14 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Device Comparison Agent</h1>
+    <h1>Device Specification Matcher</h1>
     <form method="POST">
-        <label>Model 1:</label>
-        <input type="text" name="model1" required>
-        <label>Model 2:</label>
-        <input type="text" name="model2" required>
-        <input type="submit" value="Compare">
+        <label>Enter Technical Specifications:</label><br>
+        <textarea name="specs" placeholder="Ex: Multifunction printer, 40 ppm, 1200x1200 dpi, wireless, print/scan/copy, 500-sheet capacity, 4.3-inch screen" required></textarea><br>
+        <input type="submit" value="Find Devices">
     </form>
     {% if result %}
-        <h2>Comparison Result</h2>
+        <h2>Matching Devices</h2>
         {% if "Error" in result %}
             <div class="error">{{ result|safe }}</div>
         {% else %}
@@ -100,12 +99,11 @@ HTML_TEMPLATE = """
 def index():
     result = None
     if request.method == "POST":
-        model1 = request.form["model1"]
-        model2 = request.form["model2"]
-        markdown_text = compare_equipments(model1, model2)
+        specs = request.form["specs"]
+        markdown_text = find_equipments(specs)
         if "Error" not in markdown_text:
             # Remover escaping manual e converter Markdown para HTML
-            cleaned_text = markdown_text.replace('&lt;', '<').replace('&gt;', '>')
+            cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
             result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
         else:
             result = Markup(markdown_text)  # Mantém mensagens de erro como texto seguro
