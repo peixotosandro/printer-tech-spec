@@ -19,21 +19,21 @@ client = OpenAI(
     http_client=httpx.Client(proxies=None),
 )
 
-# Função para buscar dispositivos com base em especificações fornecidas
-def find_equipments(specs):
+# Função para buscar dispositivos com base em especificações e fabricantes fornecidos
+def find_equipments(input_text):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in finding devices from manufacturers like Lexmark, HP, Ricoh, Epson, Brother that match user-provided technical specifications. Use the most recent official specifications from manufacturers' websites (e.g., www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) as of May 2025. For each manufacturer, identify one device that most closely matches the provided specifications. If no device from a manufacturer meets the majority of the specifications, state 'No matching device'. Return only a table in Markdown format with columns: Specification, Lexmark, HP, Ricoh, Epson, Brother. Include key specifications like speed (ppm), resolution (dpi), connectivity (e.g., 'Wireless' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
+            "content": "Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) até maio de 2025. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Ricoh) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm). Identifique os fabricantes mencionados (Lexmark, HP, Ricoh, Epson, Brother) e as especificações a partir do texto. Para cada fabricante identificado, liste todos os dispositivos que correspondam à maioria das especificações fornecidas. Se nenhum dispositivo de um fabricante atender à maioria das especificações, indique 'Nenhum dispositivo correspondente'. Retorne apenas uma tabela em formato Markdown com as colunas: Especificação, seguido pelas colunas de cada fabricante identificado. Inclua especificações-chave como velocidade (ppm), resolução (dpi), conectividade (ex.: 'Sem fio' se aplicável), funções, capacidade de papel (folhas), tamanho da tela (polegadas) e preço aproximado (US$). Se os dados não estiverem disponíveis, indique 'Não disponível'."
         },
         {
             "role": "user",
-            "content": f"Find devices from Lexmark, HP, Ricoh, Epson, and Brother that match these specifications: {specs}. Return only the table, no additional text."
+            "content": f"Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela, sem texto adicional."
         },
     ]
     
     try:
-        logger.debug(f"Calling API with specifications: {specs}")
+        logger.debug(f"Calling API with input: {input_text}")
         completion = client.chat.completions.create(
             model="grok-3-mini-beta",
             messages=messages,
@@ -46,19 +46,19 @@ def find_equipments(specs):
         if not content and hasattr(completion.choices[0].message, 'reasoning_content'):
             content = completion.choices[0].message.reasoning_content
         
-        return content if content else "Error: No information returned by the API. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
+        return content if content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://x.ai/api ou a documentação em https://docs.x.ai."
     except Exception as e:
-        logger.error(f"Error in API call: {str(e)}")
+        logger.error(f"Erro na chamada da API: {str(e)}")
         if "404" in str(e):
-            return "Error: Model not found or access denied for your team. Verify your API key at https://x.ai/api and contact support if the issue persists, quoting your team ID."
-        return f"Error: {str(e)}. Check the API key at https://x.ai/api or the documentation at https://docs.x.ai."
+            return "Erro: Modelo não encontrado ou acesso negado para sua equipe. Verifique sua chave de API em https://x.ai/api e contate o suporte se o problema persistir, informando seu ID de equipe."
+        return f"Erro: {str(e)}. Verifique a chave de API em https://x.ai/api ou a documentação em https://docs.x.ai."
 
 # Interface web em HTML
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Device Specification Matcher</title>
+    <title>Correspondência de Especificações de Dispositivos</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -75,15 +75,15 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Device Specification Matcher</h1>
+    <h1>Correspondência de Especificações de Dispositivos</h1>
     <form method="POST">
-        <label>Enter Technical Specifications:</label><br>
-        <textarea name="specs" placeholder="Ex: Multifunction printer, 40 ppm, 1200x1200 dpi, wireless, print/scan/copy, 500-sheet capacity, 4.3-inch screen" required></textarea><br>
-        <input type="submit" value="Find Devices">
+        <label>Insira os Fabricantes e Especificações Técnicas:</label><br>
+        <textarea name="input_text" placeholder="Ex: Lexmark, HP, Epson, Impressora multifuncional, 40 ppm, 1200x1200 dpi, sem fio, impressão/varredura/cópia, capacidade de 500 folhas, tela de 4,3 polegadas" required></textarea><br>
+        <input type="submit" value="Encontrar Dispositivos">
     </form>
     {% if result %}
-        <h2>Matching Devices</h2>
-        {% if "Error" in result %}
+        <h2>Dispositivos Correspondentes</h2>
+        {% if "Erro" in result %}
             <div class="error">{{ result|safe }}</div>
         {% else %}
             <div id="result">{{ result|safe }}</div>
@@ -98,14 +98,13 @@ HTML_TEMPLATE = """
 def index():
     result = None
     if request.method == "POST":
-        specs = request.form["specs"]
-        markdown_text = find_equipments(specs)
-        if "Error" not in markdown_text:
-            # Remover escaping manual e converter Markdown para HTML
+        input_text = request.form["input_text"]
+        markdown_text = find_equipments(input_text)
+        if "Erro" not in markdown_text:
             cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
             result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
         else:
-            result = Markup(markdown_text)  # Mantém mensagens de erro como texto seguro
+            result = Markup(markdown_text)
     return render_template_string(HTML_TEMPLATE, result=result)
 
 if __name__ == "__main__":
