@@ -38,7 +38,7 @@ def find_equipments(input_text):
     try:
         logger.debug(f"Calling API with input: {input_text}")
         completion = client.chat.completions.create(
-            model="grok-2-1212",
+            model="grok-beta",
             messages=messages,
             temperature=0.2,
             max_tokens=4000,
