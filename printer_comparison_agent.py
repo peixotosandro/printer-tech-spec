@@ -40,7 +40,7 @@ def find_equipments(input_text):
             model="grok-3-mini-beta",
             messages=messages,
             temperature=0.2,
-            max_tokens=3000,
+            max_tokens=4000,
         )
         
         logger.debug(f"Raw API response: {completion}")
@@ -80,7 +80,7 @@ HTML_TEMPLATE = """
     <h1>Pesquisa de Dispositivos</h1>
     <form method="POST">
         <label>Insira os Fabricantes e Especificações Técnicas:</label><br>
-        <textarea name="input_text" placeholder="Ex: HP, Lexmark, impressora multifuncional, tela >= 7 polegadas" required></textarea><br>
+        <textarea name="input_text" placeholder="Lexmark, HP, Canon, Impressora multifuncional, 40 ppm, 1200x1200 dpi, sem fio, impressão/digitalização/cópia, capacidade de 500 folhas, tela maior ou igual a 4,3 polegadas" required></textarea><br>
         <input type="submit" value="Encontrar Dispositivos">
     </form>
     {% if result %}
