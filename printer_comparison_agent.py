@@ -1,6 +1,7 @@
 import logging
 from flask import Flask, request, render_template_string
 from markupsafe import escape
+import markdown
 import os
 import httpx
 from openai import OpenAI
@@ -58,24 +59,6 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <title>Device Comparison Agent</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        function renderMarkdown() {
-            const resultDiv = document.getElementById('result');
-            if (resultDiv && resultDiv.innerText) {
-                console.log('Rendering Markdown:', resultDiv.innerText);
-                try {
-                    resultDiv.innerHTML = marked.parse(resultDiv.innerText);
-                } catch (e) {
-                    console.error('Markdown rendering error:', e);
-                    resultDiv.innerHTML = '<p style="color: red;">Error rendering Markdown: ' + e.message + '</p>';
-                }
-            } else {
-                console.log('No resultDiv or content found.');
-            }
-        }
-        window.onload = renderMarkdown;
-    </script>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #333; }
@@ -119,7 +102,12 @@ def index():
     if request.method == "POST":
         model1 = request.form["model1"]
         model2 = request.form["model2"]
-        result = compare_equipments(model1, model2)
+        markdown_text = compare_equipments(model1, model2)
+        if "Error" not in markdown_text:
+            # Converter Markdown para HTML no servidor
+            result = markdown.markdown(markdown_text, extensions=['tables'])
+        else:
+            result = markdown_text
     return render_template_string(HTML_TEMPLATE, result=escape(result) if result else None)
 
 if __name__ == "__main__":
