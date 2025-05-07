@@ -5,7 +5,6 @@ import markdown
 import os
 import httpx
 from openai import OpenAI
-import uuid
 
 app = Flask(__name__)
 
@@ -25,11 +24,11 @@ def find_equipments(specs):
     messages = [
         {
             "role": "system",
-            "content": "You are a highly intelligent AI assistant specialized in finding devices from manufacturers like Lexmark, HP, Ricoh, Epson, Brother, and others that match user-provided technical specifications. Use the most recent official specifications from manufacturers' websites (e.g., www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) as of May 2025. For each manufacturer, identify one device that most closely matches the provided specifications. If no device from a manufacturer meets the majority of the specifications, state that the manufacturer does not have a suitable device. Return a table in Markdown format with columns: Specification, Lexmark, HP, Ricoh, Epson, Brother. Include key specifications like speed (ppm), resolution (dpi), connectivity (e.g., 'Wireless' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable or no device matches, state 'Not available' or 'No matching device' for that manufacturer."
+            "content": "You are a highly intelligent AI assistant specialized in finding devices from manufacturers like Lexmark, HP, Ricoh, Epson, Brother that match user-provided technical specifications. Use the most recent official specifications from manufacturers' websites (e.g., www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com) as of May 2025. For each manufacturer, identify one device that most closely matches the provided specifications. If no device from a manufacturer meets the majority of the specifications, state 'No matching device'. Return only a table in Markdown format with columns: Specification, Lexmark, HP, Ricoh, Epson, Brother. Include key specifications like speed (ppm), resolution (dpi), connectivity (e.g., 'Wireless' if applicable), functions, paper capacity (sheets), screen size (inches), and approximate price (US$). If data is unavailable, state 'Not available'."
         },
         {
             "role": "user",
-            "content": f"Find devices from Lexmark, HP, Ricoh, Epson, and Brother that match these specifications: {specs}. Ensure the devices are the closest match to the provided description."
+            "content": f"Find devices from Lexmark, HP, Ricoh, Epson, and Brother that match these specifications: {specs}. Return only the table, no additional text."
         },
     ]
     
@@ -39,7 +38,7 @@ def find_equipments(specs):
             model="grok-3-mini-beta",
             messages=messages,
             temperature=0.2,
-            max_tokens=2000,
+            max_tokens=3000,
         )
         
         logger.debug(f"Raw API response: {completion}")
