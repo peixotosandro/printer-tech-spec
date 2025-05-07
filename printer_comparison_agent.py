@@ -1,5 +1,6 @@
 import logging
-from flask import Flask, request, render_template_string, escape
+from flask import Flask, request, render_template_string
+from markupsafe import escape
 import os
 import httpx
 from openai import OpenAI
