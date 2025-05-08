@@ -20,7 +20,7 @@ def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
     one_year_ago = (datetime.now() - timedelta(days=730)).strftime("%d/%m/%Y")
     prompt = f"""
-Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela >= 4,3 polegadas).
+Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (lexmark, xerox, hp, ricoh, epson, brother, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela  4,3 polegadas).
 
 Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos lançados após 2024-05-08 que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada.
 
