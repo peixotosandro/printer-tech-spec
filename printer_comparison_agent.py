@@ -3,8 +3,7 @@ from flask import Flask, request, render_template_string
 from markupsafe import Markup
 import markdown
 import os
-import httpx
-from openai import OpenAI
+import google.generativeai as genai
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -13,48 +12,39 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Configuração do cliente OpenAI para a API da xAI com cliente HTTP personalizado
-client = OpenAI(
-    base_url="https://api.x.ai/v1",
-    api_key=os.getenv("XAI_API_KEY"),
-    http_client=httpx.Client(proxies=None),
-)
+# Configuração do cliente Gemini AI
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Função para buscar dispositivos com base em especificações e fabricantes fornecidos
 def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
     one_year_ago = (datetime.now() - timedelta(days=730)).strftime("%d/%m/%Y")
-    messages = [
-        {
-            "role": "system",
-            "content": f"Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual ({current_date}). O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela >= 4,3 polegadas). Identifique todos os fabricantes mencionados no texto e as especificações a partir dele. Para cada fabricante identificado, liste todos os modelos de dispositivos lançados após {one_year_ago} que correspondam exatamente às especificações fornecidas ou à maioria delas, priorizando os critérios mencionados pelo usuário no texto de entrada. Se nenhum dispositivo recente de um fabricante atender às especificações ou se o fabricante não for reconhecido com dados disponíveis, indique 'Nenhum dispositivo recente correspondente ou fabricante não reconhecido' na coluna Dispositivo para esse fabricante. Retorne apenas uma tabela em formato Markdown com as colunas: Fabricante, Dispositivo, Velocidade (ppm), Resolução (dpi), Conectividade, Funções, Capacidade de papel (folhas), Tamanho da tela (polegadas), Preço aproximado (US$). Cada linha deve representar um dispositivo específico. Se os dados não estiverem disponíveis, indique 'Não disponível'. Certifique-se de incluir todos os modelos recentes de todos os fabricantes mencionados que atendam aos critérios fornecidos pelo usuário, sem limitar o número de resultados por fabricante."
-        },
-        {
-            "role": "user",
-            "content": f"Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela, sem texto adicional."
-        },
-    ]
+    prompt = f"""
+Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual ({current_date}). O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela >= 4,3 polegadas). Identifique todos os fabricantes mencionados no texto e as especificações a partir dele. Para cada fabricante identificado, liste todos os modelos de dispositivos lançados após {one_year_ago} que correspondam exatamente às especificações fornecidas ou à maioria delas, priorizando os critérios mencionados pelo usuário no texto de entrada. Se nenhum dispositivo recente de um fabricante atender às especificações ou se o fabricante não for reconhecido com dados disponíveis, indique 'Nenhum dispositivo recente correspondente ou fabricante não reconhecido' na coluna Dispositivo para esse fabricante. Retorne apenas uma tabela em formato Markdown com as colunas: Fabricante, Dispositivo, Velocidade (ppm), Resolução (dpi), Conectividade, Funções, Capacidade de papel (folhas), Tamanho da tela (polegadas), Preço aproximado (US$). Cada linha deve representar um dispositivo específico. Se os dados não estiverem disponíveis, indique 'Não disponível'. Certifique-se de incluir todos os modelos recentes de todos os fabricantes mencionados que atendam aos critérios fornecidos pelo usuário, sem limitar o número de resultados por fabricante.
+
+Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela, sem texto adicional.
+"""
     
     try:
-        logger.debug(f"Calling API with input: {input_text}")
-        completion = client.chat.completions.create(
-            model="grok-beta",
-            messages=messages,
-            temperature=0.2,
-            max_tokens=4000,
+        logger.debug(f"Calling Gemini API with input: {input_text}")
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "temperature": 0.2,
+                "max_output_tokens": 4000,
+            }
         )
         
-        logger.debug(f"Raw API response: {completion}")
-        content = completion.choices[0].message.content
-        if not content and hasattr(completion.choices[0].message, 'reasoning_content'):
-            content = completion.choices[0].message.reasoning_content
+        logger.debug(f"Raw API response: {response.text}")
+        content = response.text.strip()
         
-        return content if content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://x.ai/api ou a documentação em https://docs.x.ai."
+        return content if content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
     except Exception as e:
         logger.error(f"Erro na chamada da API: {str(e)}")
-        if "404" in str(e):
-            return "Erro: Modelo não encontrado ou acesso negado para sua equipe. Verifique sua chave de API em https://x.ai/api e contate o suporte se o problema persistir, informando seu ID de equipe."
-        return f"Erro: {str(e)}. Verifique a chave de API em https://x.ai/api ou a documentação em https://docs.x.ai."
+        if "403" in str(e) or "401" in str(e):
+            return "Erro: Acesso negado ou chave de API inválida. Verifique sua chave de API em https://makersuite.google.com/app/apikey e contate o suporte se o problema persistir."
+        return f"Erro: {str(e)}. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
 
 # Interface web em HTML
 HTML_TEMPLATE = """
