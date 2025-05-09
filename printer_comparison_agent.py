@@ -58,7 +58,12 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
         logger.debug(f"Raw API response: {response.text}")
         content = response.text.strip()
         
-        return content if content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
+        # Normalize the response to ensure proper Markdown table formatting
+        lines = content.split('\n')
+        normalized_content = '\n'.join(line.strip() for line in lines if line.strip())
+        logger.debug(f"Normalized content: {normalized_content}")
+        
+        return normalized_content if normalized_content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
     except Exception as e:
         logger.error(f"Erro na chamada da API: {str(e)}")
         if "403" in str(e) or "401" in str(e):
@@ -98,7 +103,12 @@ HTML_TEMPLATE = """
         {% if "Erro" in result %}
             <div class="error">{{ result|safe }}</div>
         {% else %}
-            <div id="result">{{ result|safe }}</div>
+            {% set markdown_result = markdown.markdown(result, extensions=['tables']) %}
+            {% if markdown_result %}
+                <div id="result">{{ markdown_result|safe }}</div>
+            {% else %}
+                <div class="error">Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto.</div>
+            {% endif %}
         {% endif %}
     {% endif %}
 </body>
@@ -117,7 +127,7 @@ def index():
             markdown_text = find_equipments(input_text)
             if "Erro" not in markdown_text:
                 cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
-                result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
+                result = cleaned_text
             else:
                 result = Markup(markdown_text)
     return render_template_string(HTML_TEMPLATE, result=result)
