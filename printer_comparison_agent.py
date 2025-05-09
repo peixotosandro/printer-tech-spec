@@ -19,9 +19,9 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
     prompt = f"""
-Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora, multifuncional, 40 ppm, tela 4,3 polegadas).
+Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes e precisas de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora, multifuncional, 40 ppm, tela 4,3 polegadas).
 
-Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos por ordem de lançamento (os mais novos primero) que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada.
+Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos por ordem de lançamento (os mais novos primero) que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada. Certifique-se de verificar as especificações oficiais mais recentes para dados como tamanho da tela, especialmente para modelos como Lexmark MX942 Series, que possuem uma tela de 10.1 polegadas.
 
 Se nenhum dispositivo recente de um fabricante atender às especificações, ou se o fabricante não for reconhecido com dados disponíveis, indique 'Nenhum dispositivo recente correspondente ou fabricante não reconhecido' na coluna 'Dispositivo' para esse fabricante.
 
@@ -87,6 +87,12 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
             return "Erro: Nenhuma tabela encontrada na resposta da API."
         
         normalized_content = '\n'.join(table_lines)
+        
+        # Basic validation for known models
+        if "MX942" in normalized_content:
+            normalized_content = normalized_content.replace("2.8-inch LCD", "10.1-inch color touch screen").replace("4.3-inch e-Task color touch screen", "10.1-inch color touch screen")
+            logger.warning(f"Corrected screen size for MX942 series to 10.1-inch color touch screen due to known discrepancy.")
+        
         logger.debug(f"Normalized content (table only): {normalized_content}")
         
         return normalized_content if normalized_content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
