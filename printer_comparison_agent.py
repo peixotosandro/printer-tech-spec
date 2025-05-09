@@ -58,10 +58,22 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
         logger.debug(f"Raw API response: {response.text}")
         content = response.text.strip()
         
-        # Normalize the response to ensure proper Markdown table formatting
+        # Normalize the response and extract only the Markdown table
         lines = content.split('\n')
-        normalized_content = '\n'.join(line.strip() for line in lines if line.strip())
-        logger.debug(f"Normalized content: {normalized_content}")
+        table_lines = []
+        found_table = False
+        for line in lines:
+            line = line.strip()
+            if line.startswith('|') and not found_table:
+                found_table = True
+            if found_table and line:
+                table_lines.append(line)
+        
+        if not table_lines:
+            return "Erro: Nenhuma tabela encontrada na resposta da API."
+        
+        normalized_content = '\n'.join(table_lines)
+        logger.debug(f"Normalized content (table only): {normalized_content}")
         
         return normalized_content if normalized_content else "Erro: Nenhuma informação retornada pela API. Verifique a chave de API em https://makersuite.google.com/app/apikey ou a documentação em https://ai.google.dev."
     except Exception as e:
