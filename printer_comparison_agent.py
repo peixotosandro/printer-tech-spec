@@ -42,7 +42,7 @@ Retorne uma tabela em formato Markdown com as seguintes colunas:
 
 Cada linha da tabela deve representar um dispositivo específico. Se os dados para alguma coluna não estiverem disponíveis (incluindo Screen Size), indique 'Não disponível'. É crucial incluir *todos* os modelos recentes de *todos* os fabricantes mencionados que atendam aos critérios fornecidos, sem limitar o número de resultados por fabricante.
 
-Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela em formato Markdown, sem qualquer texto introdutório ou adicional antes ou depois da tabela.
+Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela em formato Markdown, sem qualquer texto introdutório ou adicional antes ou depois da tabela, e sem envolver a tabela em blocos de código (como ```).
 """
     
     try:
@@ -63,8 +63,21 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
         lines = content.split('\n')
         table_lines = []
         found_table = False
+        inside_code_block = False
+        
         for line in lines:
             line = line.strip()
+            
+            # Detect code block markers
+            if line.startswith('```'):
+                inside_code_block = not inside_code_block
+                continue
+                
+            # Skip lines if we're inside a code block but haven't found the table yet
+            if inside_code_block and not found_table:
+                continue
+                
+            # Identify the start of the table
             if line.startswith('|') and not found_table:
                 found_table = True
             if found_table and line:
