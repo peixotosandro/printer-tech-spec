@@ -46,7 +46,7 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
     
     try:
         logger.debug(f"Calling Gemini API with input: {input_text}")
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(
             prompt,
             generation_config={
