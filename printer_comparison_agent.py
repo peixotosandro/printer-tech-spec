@@ -89,6 +89,7 @@ HTML_TEMPLATE = """
         th { background-color: #f2f2f2; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         #result { margin-top: 10px; }
+        pre { background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -103,7 +104,12 @@ HTML_TEMPLATE = """
         {% if "Erro" in result %}
             <div class="error">{{ result|safe }}</div>
         {% else %}
-            <div id="result">{{ result|safe }}</div>
+            {% if result_html %}
+                <div id="result">{{ result_html|safe }}</div>
+            {% else %}
+                <div class="error">Erro: Falha na conversão de Markdown para HTML. Exibindo texto bruto:</div>
+                <pre>{{ result_raw }}</pre>
+            {% endif %}
         {% endif %}
     {% endif %}
 </body>
@@ -114,6 +120,8 @@ HTML_TEMPLATE = """
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+    result_raw = None
+    result_html = None
     if request.method == "POST":
         if "input_text" not in request.form or not request.form["input_text"].strip():
             result = Markup("Erro: O campo de fabricantes e especificações não pode estar vazio.")
@@ -122,15 +130,18 @@ def index():
             markdown_text = find_equipments(input_text)
             if "Erro" not in markdown_text:
                 cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
+                result_raw = cleaned_text
                 try:
                     html_result = markdown.markdown(cleaned_text, extensions=['tables'])
-                    result = Markup(html_result) if html_result else Markup("Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto.")
+                    logger.debug(f"HTML result after Markdown conversion: {html_result}")
+                    result_html = Markup(html_result) if html_result else None
                 except Exception as e:
                     logger.error(f"Erro na conversão de Markdown para HTML: {str(e)}")
-                    result = Markup(f"Erro: Falha na conversão de Markdown para HTML. Detalhes: {str(e)}")
+                    result_html = None
+                result = result_raw
             else:
                 result = Markup(markdown_text)
-    return render_template_string(HTML_TEMPLATE, result=result)
+    return render_template_string(HTML_TEMPLATE, result=result, result_raw=result_raw, result_html=result_html)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
