@@ -51,7 +51,7 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
             prompt,
             generation_config={
                 "temperature": 0.2,
-                "max_output_tokens": 4000,
+                "max_output_tokens": 7000,
             }
         )
         
