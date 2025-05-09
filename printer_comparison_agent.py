@@ -41,7 +41,7 @@ Retorne uma tabela em formato Markdown com as seguintes colunas:
 
 Cada linha da tabela deve representar um dispositivo específico. Se os dados para alguma coluna não estiverem disponíveis, indique 'Não disponível'. É crucial incluir *todos* os modelos recentes de *todos* os fabricantes mencionados que atendam aos critérios fornecidos, sem limitar o número de resultados por fabricante.
 
-Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela, sem texto adicional.
+Analise o seguinte texto e encontre dispositivos que correspondam às especificações: {input_text}. Retorne apenas a tabela em formato Markdown, sem qualquer texto introdutório ou adicional antes ou depois da tabela.
 """
     
     try:
