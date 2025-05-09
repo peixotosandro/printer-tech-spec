@@ -18,11 +18,10 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # Função para buscar dispositivos com base em especificações e fabricantes fornecidos
 def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
-    one_year_ago = (datetime.now() - timedelta(days=730)).strftime("%d/%m/%Y")
     prompt = f"""
-Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela 4,3 polegadas).
+Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora, multifuncional, 40 ppm, tela 4,3 polegadas).
 
-Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos lançados após 2024-05-08 que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada.
+Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos por ordem de lançamento (os mais novos primero) que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada.
 
 Se nenhum dispositivo recente de um fabricante atender às especificações, ou se o fabricante não for reconhecido com dados disponíveis, indique 'Nenhum dispositivo recente correspondente ou fabricante não reconhecido' na coluna 'Dispositivo' para esse fabricante.
 
@@ -30,13 +29,14 @@ Retorne uma tabela em formato Markdown com as seguintes colunas:
 
 * Fabricante
 * Dispositivo
-* Velocidade (ppm)
-* Resolução (dpi)
-* Conectividade
-* Funções
-* Capacidade de papel (folhas)
-* Tamanho da tela (polegadas)
-* Tipo de Mídia de Impressão
+* Printing Technology
+* Functions
+* Print Speed (ppm)
+* Print Resolution (dpi)
+* Monthly Duty Cycle
+* Paper Capacity
+* Supported Media Types
+* Connectivity
 * Preço aproximado (US$)
 
 Cada linha da tabela deve representar um dispositivo específico. Se os dados para alguma coluna não estiverem disponíveis, indique 'Não disponível'. É crucial incluir *todos* os modelos recentes de *todos* os fabricantes mencionados que atendam aos critérios fornecidos, sem limitar o número de resultados por fabricante.
@@ -46,12 +46,12 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
     
     try:
         logger.debug(f"Calling Gemini API with input: {input_text}")
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-1.5-pro')
         response = model.generate_content(
             prompt,
             generation_config={
                 "temperature": 0.2,
-                "max_output_tokens": 7000,
+                "max_output_tokens": 4000,
             }
         )
         
