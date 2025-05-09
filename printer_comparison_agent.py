@@ -20,7 +20,7 @@ def find_equipments(input_text):
     current_date = datetime.now().strftime("%d/%m/%Y")
     one_year_ago = (datetime.now() - timedelta(days=730)).strftime("%d/%m/%Y")
     prompt = f"""
-Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (lexmark, xerox, hp, ricoh, epson, brother, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela  4,3 polegadas).
+Você é um assistente de IA altamente inteligente especializado em encontrar dispositivos de fabricantes que correspondam a especificações técnicas fornecidas pelo usuário. Use as especificações mais recentes de sites oficiais dos fabricantes (ex.: www.lexmark.com, www.hp.com, www.ricoh.com, www.epson.com, www.brother-usa.com, ou outros sites oficiais relevantes) até a data atual {current_date}. O usuário fornecerá um texto contendo os fabricantes desejados (ex.: Lexmark, HP, Canon) e as especificações técnicas (ex.: impressora multifuncional, 40 ppm, tela 4,3 polegadas).
 
 Analise o texto fornecido pelo usuário. Identifique todos os fabricantes mencionados e as especificações técnicas detalhadas. Para cada fabricante identificado, liste *todos* os modelos de dispositivos lançados após 2024-05-08 que correspondam *exatamente* às especificações fornecidas ou que se aproximem o *máximo possível* delas, priorizando os critérios mais importantes mencionados pelo usuário no texto de entrada.
 
@@ -36,7 +36,7 @@ Retorne uma tabela em formato Markdown com as seguintes colunas:
 * Funções
 * Capacidade de papel (folhas)
 * Tamanho da tela (polegadas)
-* **Media Handling**
+* Tipo de Mídia de Impressão
 * Preço aproximado (US$)
 
 Cada linha da tabela deve representar um dispositivo específico. Se os dados para alguma coluna não estiverem disponíveis, indique 'Não disponível'. É crucial incluir *todos* os modelos recentes de *todos* os fabricantes mencionados que atendam aos critérios fornecidos, sem limitar o número de resultados por fabricante.
@@ -51,7 +51,7 @@ Analise o seguinte texto e encontre dispositivos que correspondam às especifica
             prompt,
             generation_config={
                 "temperature": 0.2,
-                "max_output_tokens": 4000,
+                "max_output_tokens": 7000,
             }
         )
         
