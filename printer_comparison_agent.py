@@ -103,12 +103,7 @@ HTML_TEMPLATE = """
         {% if "Erro" in result %}
             <div class="error">{{ result|safe }}</div>
         {% else %}
-            {% set markdown_result = markdown.markdown(result, extensions=['tables']) %}
-            {% if markdown_result %}
-                <div id="result">{{ markdown_result|safe }}</div>
-            {% else %}
-                <div class="error">Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto.</div>
-            {% endif %}
+            <div id="result">{{ result|safe }}</div>
         {% endif %}
     {% endif %}
 </body>
@@ -127,7 +122,12 @@ def index():
             markdown_text = find_equipments(input_text)
             if "Erro" not in markdown_text:
                 cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
-                result = cleaned_text
+                try:
+                    html_result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
+                    result = html_result
+                except Exception as e:
+                    logger.error(f"Erro na conversão de Markdown para HTML: {str(e)}")
+                    result = Markup(f"Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto. Detalhes: {str(e)}")
             else:
                 result = Markup(markdown_text)
     return render_template_string(HTML_TEMPLATE, result=result)
