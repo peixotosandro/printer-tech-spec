@@ -123,11 +123,11 @@ def index():
             if "Erro" not in markdown_text:
                 cleaned_text = markdown_text.replace('<', '<').replace('>', '>')
                 try:
-                    html_result = Markup(markdown.markdown(cleaned_text, extensions=['tables']))
-                    result = html_result
+                    html_result = markdown.markdown(cleaned_text, extensions=['tables'])
+                    result = Markup(html_result) if html_result else Markup("Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto.")
                 except Exception as e:
                     logger.error(f"Erro na conversão de Markdown para HTML: {str(e)}")
-                    result = Markup(f"Erro: Falha na conversão de Markdown para HTML. O texto retornado pode não estar no formato correto. Detalhes: {str(e)}")
+                    result = Markup(f"Erro: Falha na conversão de Markdown para HTML. Detalhes: {str(e)}")
             else:
                 result = Markup(markdown_text)
     return render_template_string(HTML_TEMPLATE, result=result)
