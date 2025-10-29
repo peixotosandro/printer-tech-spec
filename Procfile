@@ -1,1 +1,0 @@
-web: gunicorn printer_comparison_agent:app
