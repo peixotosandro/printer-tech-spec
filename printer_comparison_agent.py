@@ -41,7 +41,7 @@ Não inclua texto antes ou depois da tabela.
     }
 
     data = {
-        "model": "grok-beta",
+        "model": "grok-3",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2
     }
@@ -108,4 +108,5 @@ if st.button("Encontrar Dispositivos"):
 
 st.divider()
 st.caption("Desenvolvido com 💡 por Sandro • Usando Grok API (xAI) e Streamlit")
+
 
